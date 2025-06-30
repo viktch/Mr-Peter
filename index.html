@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Inventory Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <meta name="theme-color" content="#2ecc71">
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('loggedInUser')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+
+  <div class="container">
+    <h1>🛒 Shop Inventory Tracker</h1>
+
+    <form id="itemForm">
+      <input type="text" id="itemName" placeholder="Item name" required />
+      <input type="number" id="itemQty" placeholder="Enter quantity" min="1" required />
+      <input type="number" id="itemPrice" placeholder="Price per item" min="1" required />
+      <input type="file" id="itemImage" accept="image/*" />
+      <button type="submit">➕ Add Item</button>
+    </form>
+
+    <input type="text" id="searchBox" placeholder="🔍 Search for item..." />
+
+    <div class="dashboard">
+      <p><strong>Total Inventory Value:</strong> ₦<span id="totalValue">0</span></p>
+      <p><strong>Total Sales Today:</strong> ₦<span id="totalSales">0</span></p>
+      <button id="exportCSV">⬇️ Export to CSV</button>
+      <button id="printReport" class="print-button">🖨️ Print Sales Report</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <h2>📦 Current Inventory</h2>
+    <div id="inventoryList"></div>
+
+    <h2>🧾 Sales Report - <span id="reportDate"></span></h2>
+    <div id="printArea" style="display: none;">
+      <table id="reportTable">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Qty Sold</th>
+            <th>Price (₦)</th>
+            <th>Total (₦)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>Grand Total</strong></td>
+            <td id="grandTotal">₦0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h2>🛠️ Edit Item</h2>
+    <div id="editSection" style="display: none;">
+      <form id="editForm">
+        <input type="text" id="editName" placeholder="Item name" required />
+        <input type="number" id="editPrice" placeholder="Price" required />
+        <input type="file" id="editImage" accept="image/*" />
+        <input type="hidden" id="originalName" />
+        <button type="submit">💾 Update Item</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function logout() {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+  </script>
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('✅ Service Worker registered'))
+        .catch(err => console.error('❌ Service Worker failed:', err));
+    }
+  </script>
+</body>
+</html>
