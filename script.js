@@ -1,283 +1,191 @@
 // script.js
+let items = JSON.parse(localStorage.getItem("inventoryItems")) || [];
+let sales = JSON.parse(localStorage.getItem("salesRecords")) || [];
 
-const form = document.getElementById("itemForm");
-const itemNameInput = document.getElementById("itemName");
-const itemQtyInput = document.getElementById("itemQty");
-const itemPriceInput = document.getElementById("itemPrice");
-const itemImageInput = document.getElementById("itemImage");
-const inventoryList = document.getElementById("inventoryList");
-const searchBox = document.getElementById("searchBox");
-const totalValueSpan = document.getElementById("totalValue");
-const totalSalesSpan = document.getElementById("totalSales");
-const exportBtn = document.getElementById("exportCSV");
-const printBtn = document.getElementById("printReport");
-const editForm = document.getElementById("editForm");
-const editSection = document.getElementById("editSection");
-const editNameInput = document.getElementById("editName");
-const editPriceInput = document.getElementById("editPrice");
-const editImageInput = document.getElementById("editImage");
-const originalNameInput = document.getElementById("originalName");
+const inventoryList = document.getElementById("inventory-list");
+const searchInput = document.getElementById("searchInput");
+let currentEditIndex = null;
 
-let inventory = {};
-let today = new Date().toISOString().split("T")[0];
-
-function getDefaultImage(itemName) {
-  const name = itemName.toLowerCase();
-  if (name.includes("bread")) return "images/bread.jpg";
-  if (name.includes("rice")) return "images/rice.jpg";
-  if (name.includes("milk")) return "images/milk.jpg";
-  if (name.includes("sugar")) return "images/sugar.jpg";
-  if (name.includes("salt")) return "images/salt.jpg";
-  if (name.includes("egg")) return "images/egg.jpg";
-  if (name.includes("oil")) return "images/oil.jpg";
-  if (name.includes("biscuit")) return "images/biscuit.jpg";
-  if (name.includes("indomie")) return "images/indomie.jpg";
-  if (name.includes("beans")) return "images/beans.jpg";
-  return "images/default.jpg";
+function saveToStorage() {
+  localStorage.setItem("inventoryItems", JSON.stringify(items));
+  localStorage.setItem("salesRecords", JSON.stringify(sales));
 }
 
-function getBase64(file) {
-  return new Promise((resolve, reject) => {
+function updateInventoryUI(filter = "") {
+  inventoryList.innerHTML = "";
+  items
+    .filter(
+      (item) =>
+        item.name.toLowerCase().includes(filter.toLowerCase()) ||
+        item.category.toLowerCase().includes(filter.toLowerCase())
+    )
+    .forEach((item, index) => {
+      const div = document.createElement("div");
+      div.className = "item-card";
+      div.setAttribute("data-name", item.name);
+      div.innerHTML = `
+        <img src="${item.image}" />
+        <div><strong>${item.name}</strong></div>
+        <div>₦${item.price} • ${item.category}</div>
+        <div>Stock: ${item.stock}</div>
+        <div class="item-total">Total Sold: ₦0</div>
+        <button class="sell-button" onclick="sellItem(${index})" ${
+        item.stock <= 0 ? "disabled" : ""
+      }>Sell</button>
+        <button class="add-button" onclick="addStock(${index})">Add</button>
+        <button class="edit-button" onclick="openEdit(${index})">Edit</button>
+      `;
+      inventoryList.appendChild(div);
+    });
+  calculateStats();
+}
+
+function sellItem(index) {
+  const item = items[index];
+  if (item.stock > 0) {
+    item.stock--;
+    const today = new Date().toISOString().split("T")[0];
+    sales.push({
+      name: item.name,
+      date: today,
+      quantity: 1,
+      price: Number(item.price) || 0,
+      cost: Number(item.cost) || 0,
+    });
+    saveToStorage();
+    updateInventoryUI(searchInput.value);
+  }
+}
+
+function addStock(index) {
+  items[index].stock++;
+  saveToStorage();
+  updateInventoryUI(searchInput.value);
+}
+
+function filterItems() {
+  updateInventoryUI(searchInput.value);
+}
+
+function addNewItem(e) {
+  e.preventDefault();
+  const name = document.getElementById("newItemName").value;
+  const stock = parseInt(document.getElementById("newItemStock").value);
+  const price = parseFloat(document.getElementById("newItemPrice").value) || 0;
+  const cost = parseFloat(document.getElementById("newItemCost").value) || 0;
+  const category = document.getElementById("newItemCategory").value;
+  const imageFile = document.getElementById("newItemImage").files[0];
+
+  if (imageFile) {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.onload = function () {
+      items.push({ name, stock, price, cost, category, image: reader.result });
+      saveToStorage();
+      document.getElementById("addItemForm").reset();
+      updateInventoryUI();
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    items.push({
+      name,
+      stock,
+      price,
+      cost,
+      category,
+      image: "https://via.placeholder.com/250x150?text=No+Image",
+    });
+    saveToStorage();
+    document.getElementById("addItemForm").reset();
+    updateInventoryUI();
+  }
+}
+
+function openEdit(index) {
+  currentEditIndex = index;
+  const item = items[index];
+  document.getElementById("editName").value = item.name;
+  document.getElementById("editPrice").value = item.price;
+  document.getElementById("editCost").value = item.cost;
+  document.getElementById("editCategory").value = item.category;
+  document.getElementById("editPreview").src = item.image;
+  document.getElementById("editModal").style.display = "flex";
+}
+
+function saveEdit() {
+  const item = items[currentEditIndex];
+  item.name = document.getElementById("editName").value;
+  item.price = parseFloat(document.getElementById("editPrice").value) || 0;
+  item.cost = parseFloat(document.getElementById("editCost").value) || 0;
+  item.category = document.getElementById("editCategory").value;
+
+  const imageFile = document.getElementById("editImage").files[0];
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      item.image = reader.result;
+      finishEdit();
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    finishEdit();
+  }
+}
+
+function finishEdit() {
+  saveToStorage();
+  closeModal();
+  updateInventoryUI(searchInput.value);
+}
+
+function closeModal() {
+  document.getElementById("editModal").style.display = "none";
+}
+
+function calculateStats() {
+  let totalSales = 0;
+  let totalProfit = 0;
+  let totalRemaining = 0;
+  let perItemSales = {};
+
+  sales.forEach((sale) => {
+    const price = Number(sale.price) || 0;
+    const cost = Number(sale.cost) || 0;
+    const qty = Number(sale.quantity) || 0;
+
+    const saleTotal = price * qty;
+    const profit = (price - cost) * qty;
+
+    totalSales += saleTotal;
+    totalProfit += profit;
+
+    if (!perItemSales[sale.name]) perItemSales[sale.name] = 0;
+    perItemSales[sale.name] += saleTotal;
+  });
+
+  items.forEach((item) => {
+    const stock = Number(item.stock) || 0;
+    const price = Number(item.price) || 0;
+    totalRemaining += stock * price;
+  });
+
+  document.getElementById(
+    "totalSales"
+  ).innerText = `Total Sales: ₦${totalSales.toLocaleString()}`;
+  document.getElementById(
+    "totalProfit"
+  ).innerText = `Total Profit: ₦${totalProfit.toLocaleString()}`;
+  document.getElementById(
+    "totalRemaining"
+  ).innerText = `Remaining Stock Value: ₦${totalRemaining.toLocaleString()}`;
+
+  document.querySelectorAll(".item-card").forEach((card) => {
+    const name = card.getAttribute("data-name");
+    const salesAmount = perItemSales[name] || 0;
+    const display = card.querySelector(".item-total");
+    if (display)
+      display.innerText = `Total Sold: ₦${salesAmount.toLocaleString()}`;
   });
 }
 
-function saveToLocalStorage() {
-  localStorage.setItem("inventory", JSON.stringify(inventory));
-}
-
-function loadFromLocalStorage() {
-  const stored = localStorage.getItem("inventory");
-  if (stored) {
-    inventory = JSON.parse(stored);
-  }
-}
-
-function updateDashboard() {
-  let totalValue = 0;
-  let totalSales = 0;
-
-  for (let item in inventory) {
-    const data = inventory[item];
-    totalValue += data.remaining * data.price;
-    if (data.sales && data.sales[today]) {
-      totalSales += data.sales[today] * data.price;
-    }
-  }
-
-  totalValueSpan.textContent = totalValue.toLocaleString();
-  totalSalesSpan.textContent = totalSales.toLocaleString();
-}
-
-function displayInventory(filter = "") {
-  inventoryList.innerHTML = "";
-
-  for (let item in inventory) {
-    if (filter && !item.toLowerCase().includes(filter.toLowerCase())) continue;
-
-    const data = inventory[item];
-
-    const div = document.createElement("div");
-    div.className = "item";
-
-    const img = document.createElement("img");
-    img.src = data.image;
-    div.appendChild(img);
-
-    const info = document.createElement("div");
-    info.className = "item-info";
-    info.innerHTML = `
-      <strong>${item}</strong>
-      <span>🧮 Stocked: ${data.stock}</span>
-      <span>🛍️ Sold: ${data.sold}</span>
-      <span>📦 Remaining: ${data.remaining}</span>
-      <span>💵 Price: ₦${data.price}</span>
-    `;
-    div.appendChild(info);
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
-    actions.innerHTML = `
-      <button class="sell" onclick="sellItem('${item}')">Sell 1</button>
-      <button class="restock" onclick="restockItem('${item}')">Restock +5</button>
-      <button onclick="startEditItem('${item}')">✏️ Edit</button>
-    `;
-    div.appendChild(actions);
-
-    inventoryList.appendChild(div);
-  }
-
-  updateDashboard();
-}
-
-function sellItem(itemName) {
-  const item = inventory[itemName];
-  if (item.remaining > 0) {
-    item.sold += 1;
-    item.remaining -= 1;
-
-    if (!item.sales) item.sales = {};
-    if (!item.sales[today]) item.sales[today] = 0;
-    item.sales[today] += 1;
-
-    saveToLocalStorage();
-    displayInventory(searchBox.value);
-  } else {
-    alert("❌ No more stock available!");
-  }
-}
-
-function restockItem(itemName) {
-  const item = inventory[itemName];
-  item.stock += 5;
-  item.remaining += 5;
-  saveToLocalStorage();
-  displayInventory(searchBox.value);
-}
-
-function startEditItem(name) {
-  const item = inventory[name];
-  if (!item) return;
-
-  editNameInput.value = name;
-  editPriceInput.value = item.price;
-  originalNameInput.value = name;
-  editSection.style.display = "block";
-}
-
-editForm.addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const oldName = originalNameInput.value;
-  const newName = editNameInput.value.trim();
-  const newPrice = parseFloat(editPriceInput.value);
-  const imageFile = editImageInput.files[0];
-
-  if (!newName || newPrice < 1) return;
-
-  const oldItem = inventory[oldName];
-  let newImage = oldItem.image;
-
-  if (imageFile) {
-    newImage = await getBase64(imageFile);
-  }
-
-  delete inventory[oldName];
-  inventory[newName] = {
-    ...oldItem,
-    price: newPrice,
-    image: newImage,
-  };
-
-  saveToLocalStorage();
-  displayInventory(searchBox.value);
-
-  editForm.reset();
-  editSection.style.display = "none";
-});
-
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const name = itemNameInput.value.trim();
-  const qty = parseInt(itemQtyInput.value);
-  const price = parseFloat(itemPriceInput.value);
-
-  if (!name || qty < 1 || price < 1) return;
-
-  let imageData = getDefaultImage(name);
-  if (itemImageInput.files.length > 0) {
-    const imageFile = itemImageInput.files[0];
-    imageData = await getBase64(imageFile);
-  }
-
-  if (inventory[name]) {
-    inventory[name].stock += qty;
-    inventory[name].remaining += qty;
-  } else {
-    inventory[name] = {
-      stock: qty,
-      sold: 0,
-      remaining: qty,
-      price: price,
-      image: imageData,
-      sales: {},
-    };
-  }
-
-  itemNameInput.value = "";
-  itemQtyInput.value = "";
-  itemPriceInput.value = "";
-  itemImageInput.value = "";
-
-  saveToLocalStorage();
-  displayInventory(searchBox.value);
-});
-
-searchBox.addEventListener("input", () => {
-  displayInventory(searchBox.value);
-});
-
-exportBtn.addEventListener("click", () => {
-  const rows = [["Item", "Stock", "Sold", "Remaining", "Price", "Sales Today"]];
-  for (let item in inventory) {
-    const data = inventory[item];
-    rows.push([
-      item,
-      data.stock,
-      data.sold,
-      data.remaining,
-      data.price,
-      (data.sales && data.sales[today]) || 0,
-    ]);
-  }
-
-  const csvContent = rows.map((e) => e.join(",")).join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `inventory_${today}.csv`;
-  a.click();
-
-  URL.revokeObjectURL(url);
-});
-
-printBtn.addEventListener("click", () => {
-  const tbody = document.querySelector("#reportTable tbody");
-  const reportDate = document.getElementById("reportDate");
-  const grandTotalElem = document.getElementById("grandTotal");
-
-  tbody.innerHTML = "";
-  let grandTotal = 0;
-  reportDate.textContent = today;
-
-  for (let item in inventory) {
-    const data = inventory[item];
-    const soldToday = data.sales?.[today] || 0;
-
-    if (soldToday > 0) {
-      const row = document.createElement("tr");
-      const total = soldToday * data.price;
-      grandTotal += total;
-
-      row.innerHTML = `
-        <td>${item}</td>
-        <td>${soldToday}</td>
-        <td>₦${data.price}</td>
-        <td>₦${total}</td>
-      `;
-      tbody.appendChild(row);
-    }
-  }
-
-  grandTotalElem.textContent = `₦${grandTotal}`;
-  window.print();
-});
-
-loadFromLocalStorage();
-displayInventory();
-// Include your existing JS code from script.js here. For this example, it's left minimal.
+// Init
+updateInventoryUI();

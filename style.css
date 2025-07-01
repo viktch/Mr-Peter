@@ -1,1 +1,73 @@
-body { font-family: Arial; padding: 1rem; background: #f7f7f7; } .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); } input, button { display: block; width: 100%; margin: 0.5rem 0; padding: 0.5rem; font-size: 1rem; }
+body {
+  font-family: Arial;
+  background: #f2ecec;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.controls,
+#addItemForm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input,
+button {
+  padding: 10px;
+  font-size: 14px;
+}
+
+#inventory-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.item-card {
+  background: rgb(248, 241, 241);
+  border: 1px solid #bb8a8a;
+  border-radius: 10px;
+  width: 250px;
+  padding: 10px;
+  text-align: center;
+}
+
+.item-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.modal {
+  position: fixed;
+  display: none;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: black;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+}
+
+button {
+  margin: 5px;
+}
+
+.sell-button { background: #dc3545; color: white; }
+.add-button { background: blue; color: white; }
+.edit-button { background: #ffc107; }

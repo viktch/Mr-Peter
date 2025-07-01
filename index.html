@@ -1,91 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop Inventory Tracker</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png" type="image/png">
-  <meta name="theme-color" content="#2ecc71">
+  <meta charset="UTF-8" />
+  <title>Inventory Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <script>
-    if (!localStorage.getItem('loggedInUser')) {
-      window.location.href = 'login.html';
-    }
-  </script>
+  <h1>Inventory Tracker</h1>
 
-  <div class="container">
-    <h1>🛒 Shop Inventory Tracker</h1>
+  <div style="text-align: center; margin: 10px;">
+    <h3 id="totalSales">Total Sales: ₦0</h3>
+    <h3 id="totalProfit">Total Profit: ₦0</h3>
+    <h3 id="totalRemaining">Remaining Stock Value: ₦0</h3>
+  </div>
 
-    <form id="itemForm">
-      <input type="text" id="itemName" placeholder="Item name" required />
-      <input type="number" id="itemQty" placeholder="Enter quantity" min="1" required />
-      <input type="number" id="itemPrice" placeholder="Price per item" min="1" required />
-      <input type="file" id="itemImage" accept="image/*" />
-      <button type="submit">➕ Add Item</button>
-    </form>
+  
+  </div>
+  
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search items..." oninput="filterItems()" />
+    <a href="report.html"><button>📊 View Sales Report</button></a>
+    <button onclick="exportSalesCSV()">Export Sales</button>
 
-    <input type="text" id="searchBox" placeholder="🔍 Search for item..." />
+  </div>
 
-    <div class="dashboard">
-      <p><strong>Total Inventory Value:</strong> ₦<span id="totalValue">0</span></p>
-      <p><strong>Total Sales Today:</strong> ₦<span id="totalSales">0</span></p>
-      <button id="exportCSV">⬇️ Export to CSV</button>
-      <button id="printReport" class="print-button">🖨️ Print Sales Report</button>
-      <button onclick="logout()">🚪 Logout</button>
-    </div>
+  <form id="addItemForm" onsubmit="addNewItem(event)">
+    <input type="text" id="newItemName" placeholder="Item name" required />
+    <input type="number" id="newItemStock" placeholder="Stock" min="1" required />
+    <input type="text" id="newItemPrice" placeholder="Selling Price (₦)" required />
+    <input type="text" id="newItemCost" placeholder="Cost Price (₦)" required />
+    <input type="text" id="newItemCategory" placeholder="Category" required />
+    <input type="file" id="newItemImage" accept="image/*" />
+    <button type="submit">➕ Add Item</button>
+  </form>
 
-    <h2>📦 Current Inventory</h2>
-    <div id="inventoryList"></div>
+  <div id="inventory-list"></div>
 
-    <h2>🧾 Sales Report - <span id="reportDate"></span></h2>
-    <div id="printArea" style="display: none;">
-      <table id="reportTable">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Qty Sold</th>
-            <th>Price (₦)</th>
-            <th>Total (₦)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3"><strong>Grand Total</strong></td>
-            <td id="grandTotal">₦0</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <h2>🛠️ Edit Item</h2>
-    <div id="editSection" style="display: none;">
-      <form id="editForm">
-        <input type="text" id="editName" placeholder="Item name" required />
-        <input type="number" id="editPrice" placeholder="Price" required />
-        <input type="file" id="editImage" accept="image/*" />
-        <input type="hidden" id="originalName" />
-        <button type="submit">💾 Update Item</button>
-      </form>
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Item</h3>
+      <input type="text" id="editName" placeholder="Item name" />
+      <input type="text" id="editPrice" placeholder="Selling Price (₦)" />
+      <input type="text" id="editCost" placeholder="Cost Price (₦)" />
+      <input type="text" id="editCategory" placeholder="Category" />
+      <input type="file" id="editImage" accept="image/*" />
+      <img id="editPreview" style="width:100px; margin:10px 0;" />
+      <button onclick="saveEdit()">💾 Save</button>
+      <button onclick="closeModal()">Cancel</button>
     </div>
   </div>
 
-  <script>
-    function logout() {
-      localStorage.removeItem('loggedInUser');
-      window.location.href = 'login.html';
-    }
-  </script>
   <script src="script.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('✅ Service Worker registered'))
-        .catch(err => console.error('❌ Service Worker failed:', err));
-    }
-  </script>
 </body>
 </html>

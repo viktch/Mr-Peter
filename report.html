@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    label, input, button {
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sales Report</h1>
+
+  <label for="startDate">Start Date:</label>
+  <input type="date" id="startDate">
+  <label for="endDate">End Date:</label>
+  <input type="date" id="endDate">
+  <button onclick="generateReport()">Generate Report</button>
+  <button onclick="exportCSV()">Export to CSV</button>
+
+  <table id="salesTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Date</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Cost</th>
+        <th>Total Cost</th>
+        <th>Total Price</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="6" style="text-align: right;"><strong>Total Sales:</strong></td>
+        <td id="totalSales">₦0</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    const sales = JSON.parse(localStorage.getItem("salesRecords")) || [];
+
+    function generateReport() {
+      const tbody = document.querySelector("#salesTable tbody");
+      const totalCell = document.getElementById("totalSales");
+      tbody.innerHTML = "";
+      let total = 0;
+
+      const startDate = new Date(document.getElementById("startDate").value);
+      const endDate = new Date(document.getElementById("endDate").value);
+
+      sales.filter(s => {
+        const d = new Date(s.date);
+        return (!isNaN(startDate) ? d >= startDate : true) && (!isNaN(endDate) ? d <= endDate : true);
+      }).forEach(s => {
+        const quantity = Number(s.quantity) || 0;
+        const cost = Number(s.cost) || 0;
+        const price = Number(s.price) || 0;
+        const totalCost = quantity * cost;
+        const totalPrice = quantity * price;
+        total += totalPrice;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${s.name}</td>
+          <td>${s.date}</td>
+          <td>${quantity}</td>
+          <td>₦${price}</td>
+          <td>₦${cost}</td>
+          <td>₦${totalCost}</td>
+          <td>₦${totalPrice}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      totalCell.innerText = `₦${total.toLocaleString()}`;
+    }
+
+    function exportCSV() {
+      const rows = [["Name","Date","Quantity","Price","Cost","Total Cost","Total Price"]];
+      let total = 0;
+      const startDate = new Date(document.getElementById("startDate").value);
+      const endDate = new Date(document.getElementById("endDate").value);
+
+      sales.filter(s => {
+        const d = new Date(s.date);
+        return (!isNaN(startDate) ? d >= startDate : true) && (!isNaN(endDate) ? d <= endDate : true);
+      }).forEach(s => {
+        const quantity = Number(s.quantity) || 0;
+        const cost = Number(s.cost) || 0;
+        const price = Number(s.price) || 0;
+        const totalCost = quantity * cost;
+        const totalPrice = quantity * price;
+        total += totalPrice;
+        rows.push([s.name, s.date, quantity, price, cost, totalCost, totalPrice]);
+      });
+
+      rows.push(["", "", "", "", "", "", "Total Sales: ₦" + total.toLocaleString()]);
+
+      const csvContent = rows.map(r => r.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sales_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

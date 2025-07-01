@@ -1,44 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Staff Login</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>🔐 Staff Login</h1>
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <button type="submit">Login</button>
-    </form>
-    <p id="loginError" style="color: red;"></p>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Staff Login</h1>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p id="loginError" style="color: red"></p>
+    </div>
 
-  <script>
-    const loginForm = document.getElementById('loginForm');
-    const errorDisplay = document.getElementById('loginError');
+    <script>
+      const loginForm = document.getElementById("loginForm");
+      const errorDisplay = document.getElementById("loginError");
 
-    loginForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+      loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
 
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-      const validUsers = {
-        'admin': '1234',
-        'staff': 'password'
-      };
+        // You can replace these with real authentication later
+        const validUsers = {
+          admin: "1234",
+          staff: "password",
+        };
 
-      if (validUsers[username] && validUsers[username] === password) {
-        localStorage.setItem('loggedInUser', username);
-        window.location.href = 'index.html';
-      } else {
-        errorDisplay.textContent = 'Invalid username or password';
-      }
-    });
-  </script>
-</body>
+        if (validUsers[username] && validUsers[username] === password) {
+          localStorage.setItem("loggedInUser", username);
+          window.location.href = "index.html";
+        } else {
+          errorDisplay.textContent = "Invalid username or password";
+        }
+      });
+    </script>
+  </body>
 </html>
