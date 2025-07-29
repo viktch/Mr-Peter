@@ -6,6 +6,7 @@ body {
 
 h1 {
   text-align: center;
+  color: green;
 }
 
 .controls,
@@ -32,16 +33,16 @@ button {
 
 .item-card {
   background: rgb(248, 241, 241);
-  border: 1px solid #bb8a8a;
+  border: 1px solid #171111;
   border-radius: 10px;
-  width: 250px;
+  width: 300px;
   padding: 10px;
   text-align: center;
 }
 
 .item-card img {
   width: 100%;
-  height: 150px;
+  height: 200px;
   object-fit: cover;
   border-radius: 5px;
 }
@@ -49,8 +50,9 @@ button {
 .modal {
   position: fixed;
   display: none;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
   background: black;
   justify-content: center;
   align-items: center;
@@ -68,6 +70,14 @@ button {
   margin: 5px;
 }
 
-.sell-button { background: #dc3545; color: white; }
-.add-button { background: blue; color: white; }
-.edit-button { background: #ffc107; }
+.sell-button {
+  background: #dc3545;
+  color: white;
+}
+.add-button {
+  background: blue;
+  color: white;
+}
+.edit-button {
+  background: #ffc107;
+}

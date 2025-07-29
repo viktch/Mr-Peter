@@ -39,6 +39,8 @@
   <input type="date" id="endDate">
   <button onclick="generateReport()">Generate Report</button>
   <button onclick="exportCSV()">Export to CSV</button>
+  <button onclick="resetDailySales()" style="background-color: red; color: white;">Reset Today's Sales</button>
+  <button onclick="viewArchivedSales()" style="background-color: #444; color: white;">View Archived Sales</button>
 
   <table id="salesTable">
     <thead>
@@ -62,9 +64,10 @@
   </table>
 
   <script>
-    const sales = JSON.parse(localStorage.getItem("salesRecords")) || [];
+    let sales = JSON.parse(localStorage.getItem("salesRecords")) || [];
+    let archivedSales = JSON.parse(localStorage.getItem("archivedSalesRecords")) || [];
 
-    function generateReport() {
+    function generateReport(data = sales) {
       const tbody = document.querySelector("#salesTable tbody");
       const totalCell = document.getElementById("totalSales");
       tbody.innerHTML = "";
@@ -73,7 +76,7 @@
       const startDate = new Date(document.getElementById("startDate").value);
       const endDate = new Date(document.getElementById("endDate").value);
 
-      sales.filter(s => {
+      data.filter(s => {
         const d = new Date(s.date);
         return (!isNaN(startDate) ? d >= startDate : true) && (!isNaN(endDate) ? d <= endDate : true);
       }).forEach(s => {
@@ -100,13 +103,13 @@
       totalCell.innerText = `₦${total.toLocaleString()}`;
     }
 
-    function exportCSV() {
+    function exportCSV(data = sales, filename = "sales_report.csv") {
       const rows = [["Name","Date","Quantity","Price","Cost","Total Cost","Total Price"]];
       let total = 0;
       const startDate = new Date(document.getElementById("startDate").value);
       const endDate = new Date(document.getElementById("endDate").value);
 
-      sales.filter(s => {
+      data.filter(s => {
         const d = new Date(s.date);
         return (!isNaN(startDate) ? d >= startDate : true) && (!isNaN(endDate) ? d <= endDate : true);
       }).forEach(s => {
@@ -127,11 +130,26 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "sales_report.csv";
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    function resetDailySales() {
+      const today = new Date().toISOString().split("T")[0];
+      const todaySales = sales.filter(s => s.date === today);
+      archivedSales = archivedSales.concat(todaySales);
+      sales = sales.filter(s => s.date !== today);
+      localStorage.setItem("salesRecords", JSON.stringify(sales));
+      localStorage.setItem("archivedSalesRecords", JSON.stringify(archivedSales));
+      alert("Today's sales have been archived and reset.");
+      generateReport();
+    }
+
+    function viewArchivedSales() {
+      generateReport(archivedSales);
     }
   </script>
 </body>
